@@ -22,23 +22,9 @@
 
         <!-- Combined container for base.png & light_stick.png (centered, height 100%) -->
         <div id="combined-container">
+            <div id="torch-glow"></div>
             <img id="base-image" src="base.png" alt="Base Statue">
             <img id="source-image" src="light_stick.png" alt="Light Stick">
-        </div>
-
-        <!-- Faint background watermark counter (behind shape, z-index 3) -->
-        <!-- Glowing circular progress gauge (bottom-left corner) -->
-        <div id="gauge-container" class="circular-mode">
-            <svg class="progress-ring" width="60" height="60">
-                <circle class="progress-ring__background" cx="30" cy="30" r="25" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" fill="transparent"/>
-                <circle class="progress-ring__circle" id="gauge-circle" cx="30" cy="30" r="25" fill="url(#cyan-glow)" stroke="none"/>
-                <defs>
-                    <linearGradient id="cyan-glow" x1="0%" y1="0%" x2="100%" y2="100%">
-                        <stop offset="0%" stop-color="#00d4ff" />
-                        <stop offset="100%" stop-color="#0088ff" />
-                    </linearGradient>
-                </defs>
-            </svg>
         </div>
 
         <!-- Small corner QR code (visible from the start, top-right) -->
@@ -48,6 +34,12 @@
                 <!-- Points to local server for testing -->
                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://busanjinbo.github.io/cheer-led-app/form.html" alt="QR Code">
             </div>
+        </div>
+
+        <!-- Debug controls (1 row, t1 and t100) -->
+        <div id="debug-controls">
+            <button id="btn-simulate">t1</button>
+            <button id="btn-fill">t100</button>
         </div>
 
         <!-- Interactive buttons (top-right corner, below/adjacent to corner-qr) -->
@@ -75,10 +67,6 @@
         <!-- Flying messages container -->
         <div id="messages-container"></div>
         
-        <!-- Debug controls (Remove in production) -->
-        <div id="debug-controls">
-            <button id="btn-simulate">테스트: 메시지 보내기</button>
-        </div>
     </div>
 
     <!-- Firebase SDK & Custom script (Non-module to prevent file:// CORS error) -->

@@ -63,7 +63,66 @@ function formatSlogan(text) {
 }
 
 // ==========================================
-// Random Positioning (Left & Right Zones, Non-overlapping)
+// Banned Zone Detection (Statue, Torch, QR, Debug controls)
+// ==========================================
+function isBannedZone(x, y, W, H) {
+    const cardWidth = 120;
+    const cardHeight = 40;
+    const cardHalfW = cardWidth / 2;
+    const cardHalfH = cardHeight / 2;
+    
+    // 1. QR Code & Debug controls (Top Right)
+    // QR starts at top: 20px, right: 20px. Width: ~148px, height including debug buttons: ~250px.
+    // Avoid top-right area: x > W - 180 - cardHalfW and y < 270 + cardHalfH
+    if (x > W - 188 - cardHalfW && y < 270 + cardHalfH) {
+        return true;
+    }
+    
+    // 2. Statue calculations
+    const W_statue = 0.8198 * H;
+    const statueLeft = W / 2 - W_statue / 2;
+    
+    // Torch coordinates (relative to combined-container: left: 82.2%, top: 17%)
+    const torchX = statueLeft + 0.822 * W_statue;
+    const torchY = 0.17 * H;
+    // Banned radius around the torch (scale with screen height)
+    const torchRadius = 0.08 * H; 
+    const distToTorch = Math.hypot(x - torchX, y - torchY);
+    if (distToTorch < torchRadius + cardHalfW) {
+        return true;
+    }
+    
+    // 3. Statue Body (center column profile depending on Y position)
+    let statueProfile = 0;
+    const relativeY = y / H;
+    
+    if (relativeY < 0.28) {
+        // Crown / Head area
+        statueProfile = 0.15; // 15% of statue width on each side
+    } else if (relativeY < 0.45) {
+        // Shoulders / Chest area
+        statueProfile = 0.24;
+    } else if (relativeY < 0.72) {
+        // Mid-body / Table area
+        statueProfile = 0.28;
+    } else {
+        // Pedestal / Base area
+        statueProfile = 0.32;
+    }
+    
+    const bannedHalfWidth = statueProfile * W_statue;
+    const leftBound = W / 2 - bannedHalfWidth - cardHalfW;
+    const rightBound = W / 2 + bannedHalfWidth + cardHalfW;
+    
+    if (x > leftBound && x < rightBound) {
+        return true;
+    }
+    
+    return false;
+}
+
+// ==========================================
+// Random Positioning (Full Screen minus Banned Zones, Non-overlapping)
 // ==========================================
 function getRandomPosition() {
     const app = document.getElementById('app');
@@ -77,51 +136,29 @@ function getRandomPosition() {
     const cardHalfW = cardWidth / 2;
     const cardHalfH = cardHeight / 2;
     
-    // Stepwise overlap gap size checking
+    // Stepwise overlap gap size checking (stricter gaps first, then looser)
     const gaps = [
-        { x: 10, y: 8 },
-        { x: 5, y: 4 },
-        { x: 1, y: 1 }
+        { x: 15, y: 12 },
+        { x: 8, y: 6 },
+        { x: 2, y: 2 }
     ];
     
     for (const gap of gaps) {
-        for (let attempt = 0; attempt < 80; attempt++) {
-            // Pick Y coordinate first
+        for (let attempt = 0; attempt < 150; attempt++) {
+            const minX = margin + cardHalfW;
+            const maxX = W - margin - cardHalfW;
             const minY = margin + cardHalfH;
             const maxY = H - margin - cardHalfH;
+            
+            const x = Math.floor(Math.random() * (maxX - minX)) + minX;
             const y = Math.floor(Math.random() * (maxY - minY)) + minY;
             
-            // Determine dynamic banned width around center W / 2 based on Y height
-            let centerBannedHalfWidth = 220; // default for middle area (shoulders/head)
-            if (y < H * 0.28) {
-                // Top area: only torch on the right, allow messages above head!
-                centerBannedHalfWidth = 100;
-            } else if (y > H * 0.72) {
-                // Bottom area: wider body zone
-                centerBannedHalfWidth = 240;
-            }
-            
-            // Randomly choose left (0) or right (1) zone
-            const isLeft = Math.random() < 0.5;
-            let x;
-            if (isLeft) {
-                const minX = margin + cardHalfW;
-                const maxX = W / 2 - centerBannedHalfWidth - cardHalfW;
-                if (maxX <= minX) continue;
-                x = Math.floor(Math.random() * (maxX - minX)) + minX;
-            } else {
-                const minX = W / 2 + centerBannedHalfWidth + cardHalfW;
-                const maxX = W - margin - cardHalfW;
-                if (maxX <= minX) continue;
-                x = Math.floor(Math.random() * (maxX - minX)) + minX;
-            }
-            
-            // Avoid top-right corner zone (QR container & action controls)
-            if (!isLeft && x > W - 180 && y < 220) {
+            // 1. Check banned zones
+            if (isBannedZone(x, y, W, H)) {
                 continue;
             }
             
-            // Check overlaps with already active slogans on the screen
+            // 2. Check overlap with active messages
             let overlaps = false;
             for (const active of activeMessages) {
                 const dx = Math.abs(x - active.x);
@@ -138,21 +175,23 @@ function getRandomPosition() {
         }
     }
     
-    // Fallback: spawn with absolute random bounds (forces layout even when overcrowded)
-    const isLeftFallback = Math.random() < 0.5;
-    let x;
-    const y = Math.floor(Math.random() * (H - cardHeight - margin * 2)) + margin + cardHalfH;
-    
-    let centerBannedHalfWidth = 220;
-    if (y < H * 0.28) centerBannedHalfWidth = 100;
-    else if (y > H * 0.72) centerBannedHalfWidth = 240;
-    
-    if (isLeftFallback) {
-        x = Math.floor(Math.random() * (W / 2 - centerBannedHalfWidth - cardWidth - margin * 2)) + margin + cardHalfW;
-    } else {
-        x = Math.floor(Math.random() * (W / 2 - centerBannedHalfWidth - cardWidth - margin * 2)) + W / 2 + centerBannedHalfWidth + cardHalfW;
+    // Fallback: search 100 times just avoiding banned zones, even if overlap occurs
+    for (let attempt = 0; attempt < 100; attempt++) {
+        const minX = margin + cardHalfW;
+        const maxX = W - margin - cardHalfW;
+        const minY = margin + cardHalfH;
+        const maxY = H - margin - cardHalfH;
+        
+        const x = Math.floor(Math.random() * (maxX - minX)) + minX;
+        const y = Math.floor(Math.random() * (maxY - minY)) + minY;
+        
+        if (!isBannedZone(x, y, W, H)) {
+            return { x, y };
+        }
     }
-    return { x, y };
+    
+    // Ultimate fallback: left side safe zone
+    return { x: margin + cardHalfW, y: margin + cardHalfH };
 }
 
 // ==========================================
@@ -172,10 +211,35 @@ function processQueue() {
         const msg = messageQueue.shift();
         currentMessageCount++;
         
-        const fillPercent = (currentMessageCount / MAX_MESSAGES) * 100;
-        const gaugeCircle = document.getElementById('gauge-circle');
-        if (gaugeCircle) {
-            gaugeCircle.style.transform = `scale(${fillPercent / 100})`;
+        const fillPercent = currentMessageCount / MAX_MESSAGES;
+        const torchGlow = document.getElementById('torch-glow');
+        if (torchGlow) {
+            const scaleVal = 0.4 + 0.6 * fillPercent;
+            gsap.set(torchGlow, {
+                xPercent: -50,
+                yPercent: -50,
+                scale: scaleVal,
+                opacity: fillPercent
+            });
+            
+            // Add visual vibration when close to 100
+            if (currentMessageCount >= MAX_MESSAGES * 0.9 && !torchGlow.dataset.flickering) {
+                torchGlow.dataset.flickering = "true";
+                gsap.to(torchGlow, {
+                    opacity: 0.75,
+                    duration: 0.15,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut"
+                });
+                gsap.to(torchGlow, {
+                    scale: scaleVal * 1.06,
+                    duration: 0.08,
+                    repeat: -1,
+                    yoyo: true,
+                    ease: "sine.inOut"
+                });
+            }
         }
         
         const container = document.getElementById('messages-container');
@@ -213,7 +277,7 @@ function processQueue() {
     if (currentMessageCount >= MAX_MESSAGES) {
         const qr = document.getElementById('corner-qr');
         const completeBtn = document.getElementById('complete-btn');
-        const gauge = document.getElementById('gauge-container');
+        const debugControls = document.getElementById('debug-controls');
         if (qr && qr.style.display !== 'none' && !completeBtn.classList.contains('visible')) {
             gsap.to(qr, {
                 opacity: 0,
@@ -226,14 +290,14 @@ function processQueue() {
                 }
             });
             
-            if (gauge) {
-                gsap.to(gauge, {
+            if (debugControls) {
+                gsap.to(debugControls, {
                     opacity: 0,
-                    y: 10,
+                    scale: 0.8,
                     duration: 0.8,
                     ease: "power2.inOut",
                     onComplete: () => {
-                        gauge.style.display = 'none';
+                        debugControls.style.display = 'none';
                     }
                 });
             }
@@ -249,10 +313,30 @@ function triggerFinale() {
     isTransitioning = true;
     
     const app = document.getElementById('app');
-    const centerX = app.clientWidth / 2 + 230;
-    const centerY = app.clientHeight * 0.22;
+    const container = document.getElementById('combined-container');
+    let centerX = app.clientWidth / 2 + 230;
+    let centerY = app.clientHeight * 0.22;
     
+    if (container) {
+        const containerRect = container.getBoundingClientRect();
+        const appRect = app.getBoundingClientRect();
+        const leftOffset = containerRect.left - appRect.left;
+        centerX = leftOffset + containerRect.width * 0.822;
+        centerY = containerRect.height * 0.17;
+    }
+    
+    const torchGlow = document.getElementById('torch-glow');
     const tl = gsap.timeline();
+    
+    if (torchGlow) {
+        gsap.killTweensOf(torchGlow);
+        tl.to(torchGlow, {
+            opacity: 0,
+            scale: 0,
+            duration: 1.0,
+            ease: "power3.in"
+        }, 0);
+    }
     
     // 1. Fly and scale down all message cards to the center statue
     activeMessages.forEach((active, index) => {
@@ -397,12 +481,7 @@ window.onload = () => {
         enqueueMessage({ name: randomName, text: randomMsg });
     });
     
-    // Add quick fill feature to debug controls for instant testing
-    const debugDiv = document.getElementById('debug-controls');
-    const fillBtn = document.createElement('button');
-    fillBtn.innerText = '테스트: 100개 채우기';
-    fillBtn.style.marginLeft = '10px';
-    fillBtn.addEventListener('click', () => {
+    document.getElementById('btn-fill').addEventListener('click', () => {
         const remaining = MAX_MESSAGES - currentMessageCount;
         for (let i = 0; i < remaining; i++) {
             const randomName = testNames[Math.floor(Math.random() * testNames.length)];
@@ -410,5 +489,4 @@ window.onload = () => {
             enqueueMessage({ name: randomName, text: randomMsg });
         }
     });
-    debugDiv.appendChild(fillBtn);
 };
