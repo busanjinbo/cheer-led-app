@@ -1,0 +1,312 @@
+:root {
+    --bg-color: #050508;
+    --text-color: #ffffff;
+    --primary-glow: rgba(0, 212, 255, 0.8);
+    --secondary-glow: rgba(255, 0, 150, 0.8);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Outfit', sans-serif;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* 16:9 Centered Billboard Container */
+#app {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    max-width: 177.78vh; /* 16/9 * height */
+    max-height: 56.25vw; /* 9/16 * width */
+    aspect-ratio: 16/9;
+    background-color: var(--bg-color);
+    overflow: hidden;
+    box-shadow: 0 0 50px rgba(0, 0, 0, 0.8);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Ambient Background Lights */
+.ambient-light {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, rgba(0, 212, 255, 0.05) 0%, rgba(0, 0, 0, 0) 70%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Glowing circular progress gauge (bottom-left corner) */
+#gauge-container.circular-mode {
+    position: absolute;
+    bottom: 25px;
+    left: 20px;
+    width: 60px;
+    height: 60px;
+    z-index: 30;
+    pointer-events: none;
+}
+
+.progress-ring {
+    transform: rotate(-90deg); /* Start progress from the very top */
+    transform-origin: center;
+}
+
+.progress-ring__circle {
+    transform: scale(0);
+    transform-origin: center;
+    transition: transform 0.4s cubic-bezier(0.1, 0.8, 0.25, 1);
+    filter: drop-shadow(0 0 5px rgba(0, 212, 255, 0.8));
+}
+
+/* Combined Container for base.png & light_stick.png (centered, full height) */
+#combined-container {
+    position: absolute;
+    height: 100%;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 5;
+}
+
+#base-image, #source-image {
+    height: 100%;
+    width: auto;
+    display: block;
+    user-select: none;
+    pointer-events: none;
+}
+
+#source-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    transition: opacity 0.5s ease;
+}
+
+/* Corner QR Code (Top-Right, Visible from start) */
+#corner-qr {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 12px;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+}
+
+#corner-qr p {
+    font-size: 0.85rem;
+    color: #a1a1aa !important;
+    margin-bottom: 6px;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+}
+
+.qr-box-small {
+    background: white;
+    padding: 6px;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.2);
+}
+
+.qr-box-small img {
+    width: 110px;
+    height: 110px;
+    display: block;
+}
+
+/* Interactive Buttons */
+#action-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 35;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.icon-btn {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.icon-btn:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: #00d4ff;
+    box-shadow: 0 0 15px rgba(0, 212, 255, 0.5);
+    transform: scale(1.05);
+}
+
+.icon-btn:active {
+    transform: scale(0.95);
+}
+
+.btn-svg {
+    width: 24px;
+    height: 24px;
+    color: white;
+    transition: color 0.3s ease;
+}
+
+.icon-btn:hover .btn-svg {
+    color: #00d4ff;
+}
+
+.glow-btn {
+    border-color: rgba(0, 212, 255, 0.3);
+    box-shadow: 0 0 10px rgba(0, 212, 255, 0.2);
+}
+
+.icon-btn.visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Flying & Floating Slogans */
+#messages-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 20;
+}
+
+.floating-message {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 120px;
+    min-height: 40px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 6px 10px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    color: white;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3), 0 0 10px rgba(0, 212, 255, 0.2);
+    opacity: 0;
+    white-space: normal;
+    word-break: break-all;
+    overflow-wrap: break-word;
+    z-index: 20;
+}
+
+.floating-message .author {
+    display: block;
+    font-size: 0.7rem;
+    color: #a5b4fc;
+    margin-bottom: 2px;
+    font-weight: 300;
+}
+
+/* Slide Container for Left Side Panels */
+#slide-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 60%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 15;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden;
+}
+
+.slide-img {
+    position: absolute;
+    top: 5%;
+    left: 5%;
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+    opacity: 0;
+}
+
+
+
+/* Flash Overlay for Transition */
+#flash-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: radial-gradient(circle, #ffffff 0%, #00d4ff 70%);
+    opacity: 0;
+    z-index: 50;
+    pointer-events: none;
+}
+
+/* Debug */
+#debug-controls {
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    z-index: 100;
+}
+
+#debug-controls button {
+    padding: 10px 20px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.85rem;
+}
+
+#debug-controls button:hover {
+    background: rgba(255,255,255,0.2);
+}

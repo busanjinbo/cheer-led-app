@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slogan LED Board</title>
+    <link rel="stylesheet" href="index.css?v=3">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;500;700&display=swap" rel="stylesheet">
+    <!-- GSAP for Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+</head>
+<body>
+    <!-- 16:9 Ratio Container -->
+    <div id="app">
+        <!-- Background elements -->
+        <div class="ambient-light"></div>
+        <div class="stars"></div>
+
+        <!-- Flash overlay for the cinematic finale transition -->
+        <div id="flash-overlay"></div>
+
+        <!-- Combined container for base.png & light_stick.png (centered, height 100%) -->
+        <div id="combined-container">
+            <img id="base-image" src="base.png" alt="Base Statue">
+            <img id="source-image" src="light_stick.png" alt="Light Stick">
+        </div>
+
+        <!-- Faint background watermark counter (behind shape, z-index 3) -->
+        <!-- Glowing circular progress gauge (bottom-left corner) -->
+        <div id="gauge-container" class="circular-mode">
+            <svg class="progress-ring" width="60" height="60">
+                <circle class="progress-ring__background" cx="30" cy="30" r="25" stroke="rgba(255,255,255,0.08)" stroke-width="1.5" fill="transparent"/>
+                <circle class="progress-ring__circle" id="gauge-circle" cx="30" cy="30" r="25" fill="url(#cyan-glow)" stroke="none"/>
+                <defs>
+                    <linearGradient id="cyan-glow" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#00d4ff" />
+                        <stop offset="100%" stop-color="#0088ff" />
+                    </linearGradient>
+                </defs>
+            </svg>
+        </div>
+
+        <!-- Small corner QR code (visible from the start, top-right) -->
+        <div id="corner-qr">
+            <p>참여하기 ✨</p>
+            <div class="qr-box-small">
+                <!-- Points to local server for testing -->
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=http://localhost:8000/form.html" alt="QR Code">
+            </div>
+        </div>
+
+        <!-- Interactive buttons (top-right corner, below/adjacent to corner-qr) -->
+        <div id="action-controls">
+            <!-- 100 messages complete button (icon-only glowing circle) -->
+            <button id="complete-btn" class="icon-btn glow-btn" aria-label="Complete event">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="btn-svg">
+                    <circle cx="12" cy="12" r="9"></circle>
+                </svg>
+            </button>
+            <!-- Shift & Slide Arrow button (icon-only arrow) -->
+            <button id="arrow-btn" class="icon-btn arrow-btn" aria-label="Next slide">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="btn-svg">
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+            </button>
+        </div>
+
+        <!-- Slides container for 1.png and 2.png (spawns on the left side) -->
+        <div id="slide-container">
+            <img id="slide-img-1" class="slide-img" src="1.png" alt="Slide 1">
+            <img id="slide-img-2" class="slide-img" src="2.png" alt="Slide 2">
+        </div>
+
+        <!-- Flying messages container -->
+        <div id="messages-container"></div>
+        
+        <!-- Debug controls (Remove in production) -->
+        <div id="debug-controls">
+            <button id="btn-simulate">테스트: 메시지 보내기</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK & Custom script (Non-module to prevent file:// CORS error) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-database-compat.js"></script>
+    <script src="main.js?v=3"></script>
+</body>
+</html>
