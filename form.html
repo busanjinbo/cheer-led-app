@@ -57,20 +57,35 @@
         button { 
             width: 100%; 
             padding: 16px; 
-            background: linear-gradient(135deg, #00d4ff, #ff0096); 
-            border: none; 
             border-radius: 12px; 
             color: white; 
-            font-weight: 700; 
-            font-size: 18px; 
             cursor: pointer; 
-            transition: transform 0.2s, box-shadow 0.2s; 
+            transition: all 0.2s ease; 
         }
         button:active { 
             transform: scale(0.98); 
         }
-        button:hover {
+        #submit-btn {
+            background: linear-gradient(135deg, #00d4ff, #ff0096); 
+            border: none; 
+            font-weight: 700; 
+            font-size: 18px; 
+        }
+        #submit-btn:hover {
             box-shadow: 0 5px 20px rgba(255, 0, 150, 0.4);
+        }
+        #support-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 12px;
+            font-weight: 500;
+            font-size: 16px;
+        }
+        #support-btn:hover {
+            background: rgba(255, 255, 255, 0.10);
+            color: white;
+            border-color: rgba(255, 255, 255, 0.3);
         }
         .status {
             text-align: center;
@@ -90,6 +105,7 @@
         <input type="text" id="message" placeholder="20자 이내의 구호를 입력하세요" maxlength="20" required>
         <div id="char-counter" style="text-align: right; font-size: 0.85rem; color: #a1a1aa; margin-top: -10px; margin-bottom: 16px; padding-right: 4px;">0 / 20</div>
         <button id="submit-btn">강제징용노동자상에게 전하기 ✨</button>
+        <button id="support-btn">집회 후원하기 💝 카카오뱅크 신성호</button>
         <p id="status" class="status">전송 완료! 메인 화면을 확인하세요.</p>
     </div>
 
@@ -149,6 +165,40 @@
                 showSuccess();
             });
         });
+        
+        document.getElementById('support-btn').addEventListener('click', () => {
+            const accountNum = '3333-21-9775177';
+            
+            // Try modern navigator.clipboard API
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(accountNum)
+                    .then(() => {
+                        alert('계좌번호가 복사되었습니다. 후원 감사합니다');
+                    })
+                    .catch(err => {
+                        console.error('Clipboard copy failed: ', err);
+                        fallbackCopy(accountNum);
+                    });
+            } else {
+                fallbackCopy(accountNum);
+            }
+        });
+        
+        function fallbackCopy(text) {
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed'; // prevent scrolling to bottom
+            textarea.style.opacity = '0';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                alert('계좌번호가 복사되었습니다. 후원 감사합니다');
+            } catch (err) {
+                alert('계좌번호 복사에 실패했습니다. 직접 복사해주세요: ' + text);
+            }
+            document.body.removeChild(textarea);
+        }
         
         function showSuccess() {
             document.getElementById('submit-btn').style.display = 'none';
